@@ -1,75 +1,165 @@
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css");
+
+@font-face {
+  font-family: 'Cafe24Ssurround';
+  src: url('./assets/fonts/Cafe24Ssurround-v2.0.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+@layer base {}
+
+/* 입력 요소는 선택 가능하도록 예외 처리 */
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+  touch-action: pan-x pan-y;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  --height-header: 55px;
+  --height-bottom-nav: 70px;
+  --status-bar-height: 0px;
+  --safe-area-bottom: 0px;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  /* Figma Colors */
+  --primary-main-600: #FF70D4;
+  --primary-main-500: #FF88DC;
+  --primary-main-400: #FFAAE6;
+  --primary-main-300: #FFBDEB;
+  --primary-main-200: #FFD7F3;
+  --primary-main-100: #FFEEFA;
+  --primary-main-50: #FFF4FC;
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  --secondary-blue-600: #2E90FA;
+  --secondary-blue-500: #53B1FD;
+  --secondary-blue-400: #84CAFF;
+  --secondary-blue-300: #B2DDFF;
+  --secondary-blue-200: #D1E9FF;
+  --secondary-blue-100: #EFF8FF;
+  --secondary-blue-50: #F5FAFF;
+
+  --secondary-purple-600: #7A5AF8;
+  --secondary-purple-500: #9B8AFB;
+  --secondary-purple-400: #BDB4FE;
+  --secondary-purple-300: #D9D6FE;
+  --secondary-purple-200: #EBE9FE;
+  --secondary-purple-100: #F4F3FF;
+  --secondary-purple-50: #FAFAFF;
+
+  --secondary-yellow-600: #FB6514;
+  --secondary-yellow-500: #FD853A;
+  --secondary-yellow-400: #FEB273;
+  --secondary-yellow-300: #FDDCAB;
+  --secondary-yellow-200: #FFEAD5;
+  --secondary-yellow-100: #FFF8E5;
+  --secondary-yellow-50: #FFFAF5;
+
+  --secondary-mint-600: #00D0BF;
+  --secondary-mint-500: #34E8D9;
+  --secondary-mint-400: #73EBE1;
+  --secondary-mint-300: #97F4ED;
+  --secondary-mint-200: #C1FDF8;
+  --secondary-mint-100: #E8FDFB;
+  --secondary-mint-50: #EAFFFD;
+
+  --status-success-600: #12B76A;
+  --status-success-500: #32D583;
+  --status-success-400: #6CE9A6;
+  --status-success-300: #A6F4C5;
+  --status-success-200: #D1FADF;
+  --status-success-100: #ECFDF3;
+  --status-success-50: #F6FEF9;
+
+  --status-error-600: #FA5145;
+  --status-error-500: #F97066;
+  --status-error-400: #FDA29B;
+  --status-error-300: #FECDCA;
+  --status-error-200: #FEE4E2;
+  --status-error-100: #FEF3F2;
+  --status-error-50: #FFFBFA;
+
+  --layout-black: #111111;
+  --layout-white: #ffffff;
+  --layout-gray-500: #404040;
+  --layout-gray-400: #7B7B7B;
+  --layout-gray-300: #999999;
+  --layout-gray-200: #CCCCCC;
+  --layout-gray-100: #DDDDDD;
+  --layout-gray-50: #F5F5F5;
 }
 
-html, body {
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  padding: 0;
-}
-
+html,
 body {
-  min-width: 320px;
+  height: 100%;
+  overflow: hidden;
+  /* 전체 스크롤을 막고 내부 요소에서만 스크롤하게 설정 */
+}
+
+#root {
+  position: fixed;
+  /* 화면을 고정시켜 시스템이 밀어 올리지 못하게 함 */
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* 메인 콘텐츠 영역 스크롤 처리를 위한 클래스 */
+.scroll-container {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+* {
+  touch-action: pan-x pan-y;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+img {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+  user-select: none;
+  pointer-events: auto;
+  /* Allow clicks if needed */
 }
 
 a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+/* 입력 요소는 선택 가능하도록 예외 처리 */
+input,
+textarea {
+  touch-action: auto;
+  -webkit-touch-callout: auto;
+  -webkit-user-select: text;
+  user-select: text;
 }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+/* 스크롤바 숨김 */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.target-word {
+  font-weight: 700;
 }

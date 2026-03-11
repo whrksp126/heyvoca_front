@@ -1,23 +1,55 @@
-FROM node:18-alpine AS build
-
+FROM node:20-alpine AS build
 WORKDIR /app
-
 COPY package.json package-lock.json ./
-RUN npm install
+RUN npm ci
 
-COPY . .
-
-# NODE_ENV에 따라 빌드 방식 분기
-ARG NODE_ENV=local
+ARG VITE_BACKEND_URL
+ARG VITE_DEBUG=false
+ARG VITE_ENV=production
+ARG NODE_ENV=production
+ENV VITE_BACKEND_URL=$VITE_BACKEND_URL
+ENV VITE_DEBUG=$VITE_DEBUG
+ENV VITE_ENV=$VITE_ENV
 ENV NODE_ENV=$NODE_ENV
 
-# Staging/Production은 빌드 수행
-RUN if [ "$NODE_ENV" = "staging" ] || [ "$NODE_ENV" = "production" ]; then npm run build; fi
+COPY . .
+RUN npm run build       # Vite가 ENV를 읽어 dist 생성
 
-EXPOSE 3000
+FROM nginx:1.27-alpine
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/dist /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx","-g","daemon off;"]
 
-# 실행 방식 분기
-CMD if [ "$NODE_ENV" = "local" ] || [ "$NODE_ENV" = "development" ]; \
-    then npm run dev -- --host --port 3000; \
-    else npm run preview -- --host --port 3000; \
-    fi
+
+
+
+
+
+# # Node.js 환경에서 빌드 (운영)
+# FROM node:20-alpine AS builder
+# WORKDIR /app
+
+# # npm 기본 레지스트리 설정
+# RUN npm config set registry https://registry.npmjs.org/
+
+# # package.json과 package-lock.json 복사
+# COPY package.json package-lock.json ./
+
+# # 패키지 설치 (버전 차이 방지)
+# RUN npm ci
+
+# # 소스 코드 복사
+# COPY . .
+
+# # 빌드 실행 (운영 환경)
+# ARG NODE_ENV=production
+# ENV NODE_ENV=${NODE_ENV}
+# RUN npm run build
+
+# # Nginx를 사용하여 서비스
+# FROM nginx:stable-alpine AS production
+# COPY nginx.prod.conf /etc/nginx/nginx.conf
+# COPY --from=builder /app/dist /usr/share/nginx/html
+# EXPOSE 80
+# CMD ["nginx", "-g", "daemon off;"]

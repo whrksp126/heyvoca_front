@@ -1,0 +1,31 @@
+
+import React from 'react';
+
+const Header = () => {
+  "use memo"; // React Compiler가 이 컴포넌트를 자동으로 최적화
+
+  return (
+    <div className='
+      flex items-center justify-between
+      w-full h-[55px]
+      px-[16px] py-[14px]
+      border-b-[1px] border-[#ddd]
+      bg-layout-white 
+      dark:bg-layout-black
+    '>
+      <div className="left">
+        
+      </div>
+      <div className="center">
+        <h2 className='text-[16px] font-[700]'>
+          마이페이지
+        </h2>
+      </div>
+      <div className="right">
+
+      </div>
+    </div>
+  );
+};
+
+export default Header; 

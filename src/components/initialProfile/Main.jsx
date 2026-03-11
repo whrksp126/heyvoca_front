@@ -1,0 +1,233 @@
+import React, { useState } from 'react';
+import { useUser } from '../../context/UserContext';
+import { motion } from 'framer-motion';
+import HeyCharacter from '../../assets/images/HeyCharacter.png';
+import InitialProfileStep2NewFullSheet from '../newFullSheet/InitialProfileStep2NewFullSheet';
+import { useVocabulary } from '../../context/VocabularyContext';
+import { useNavigate } from 'react-router-dom';
+import { useNewFullSheetActions } from '../../context/NewFullSheetContext';
+import { useOverlayActions } from '../../context/OverlayContext';
+import { backendUrl, fetchDataAsync } from '../../utils/common';
+import InitialProfileGemRewardOverlay from '../overlay/InitialProfileGemRewardOverlay';
+
+const getColorSet = (mainColor) => {
+  switch (mainColor) {
+    case '#FF70D4': return {
+      main: "#FF70D4",
+      sub: "#FF70D44d",
+      background: "var(--primary-main-100)"
+    };
+    case '#CD8DFF': return {
+      main: "#CD8DFF",
+      sub: "#CD8DFF4d",
+      background: "#F8E6FF"
+    };
+    case '#74D5FF': return {
+      main: "#74D5FF",
+      sub: "#74D5FF4d",
+      background: "#EAF6FF"
+    };
+    case '#42F98B': return {
+      main: "#42F98B",
+      sub: "#42F98B4d",
+      background: "#E6FFE9"
+    };
+    case '#FFBD3C': return {
+      main: "#FFBD3C",
+      sub: "#FFBD3C4d",
+      background: "#FFF8E6"
+    };
+    default: return {
+      main: "#FF70D4",
+      sub: "#FF70D44d",
+      background: "var(--primary-main-100)"
+    };
+  }
+};
+
+
+const Main = () => {
+  "use memo"; // React Compiler가 이 컴포넌트를 자동으로 최적화
+
+  const navigate = useNavigate();
+  const { addVocabularySheet, updateVocabularySheet } = useVocabulary();
+  const { setUserProfile, updateUserProfile } = useUser();
+  const { pushNewFullSheet, clearStack: clearNewFullSheetStack } = useNewFullSheetActions();
+  const { showOverlay } = useOverlayActions();
+  const [userInitialProfile, setUserInitialProfile] = useState({
+    name: null,
+    level: null,
+    vocabook: null,
+  });
+
+  // React Compiler가 자동으로 useCallback 처리
+  const completeOnboarding = async (profile) => {
+    // null 체크 추가
+    if (!profile || !profile.name || !profile.level || !profile.vocabook) {
+      console.error('프로필 정보가 완전하지 않습니다:', profile);
+      alert('프로필 정보가 완전하지 않습니다. 다시 시도해주세요.');
+      return;
+    }
+
+    console.log("단어장 저장 및 초기화 시작");
+    // 화면을 즉시 전환하여 배경 화면 노출 방지
+    navigate('/home');
+    clearNewFullSheetStack();
+
+    try {
+      const updates = {
+        level_id: profile.level,
+        username: profile.name,
+      };
+      await updateUserProfile(updates);
+
+      // 단어장 원샷(One-shot) 생성: 단어 리스트를 포함하여 한 번에 생성
+      const vocabularySheet = await addVocabularySheet({
+        title: profile.vocabook.title, // 'name' 대신 'title' 사용
+        color: profile.vocabook.color || getColorSet('#FF70D4'),
+        vocaList: profile.vocabook.vocaList.map((word) => {
+          return {
+            origin: word.origin,
+            meanings: word.meanings,
+            examples: word.examples,
+            vocaId: word.voca_id || word.id, // DB 연동된 voca_id 사용
+          };
+        }),
+      });
+
+      console.log("단어장 저장 완료:", vocabularySheet.title);
+    } catch (error) {
+      console.error('데이터 저장 중 오류 발생:', error);
+    }
+  };
+
+  const endInitialProfile = async (profile = userInitialProfile) => {
+    console.log('endInitialProfile', profile);
+
+    // 초대 코드 처리
+    if (profile.inviteCode) {
+      try {
+        const url = `${backendUrl}/auth/save_invite_code`;
+        const method = 'POST';
+        const fetchData = { invite_code: profile.inviteCode };
+        const result = await fetchDataAsync(url, method, fetchData, false);
+
+        // 보석 업데이트 반영 및 효과 연출 (SheetStack 이용)
+        if (result && result.code === 200 && result.data?.my_gem_cnt !== undefined) {
+          const newGemCnt = result.data.my_gem_cnt;
+          const gained = 10;
+
+          setUserProfile(prev => ({
+            ...prev,
+            gem_cnt: newGemCnt
+          }));
+
+          if (gained > 0) {
+            showOverlay(
+              InitialProfileGemRewardOverlay,
+              {
+                gemCount: gained,
+                onConfirm: async () => {
+                  await completeOnboarding(profile);
+                }
+              }
+            );
+            return; // 효과 확인 버튼을 누를 때까지 중단
+          }
+        }
+      } catch (error) {
+        console.error('초대 코드 저장 실패:', error);
+      }
+    }
+
+    completeOnboarding(profile);
+  };
+
+
+  const buttonVariants = {
+    hover: {
+      scale: 1.02,
+      backgroundColor: "#FF7AC4",
+      boxShadow: "0 4px 8px rgba(0,0,0,0.1)"
+    },
+    tap: {
+      scale: 0.98,
+      backgroundColor: "#FF6AB4"
+    }
+  };
+
+  return (
+    <div style={{
+      position: 'relative',
+      width: '100%',
+      height: '100vh',
+      overflow: 'hidden',
+      backgroundColor: 'var(--primary-main-100)'
+    }}>
+      <div style={{ paddingTop: 'var(--status-bar-height)' }}></div>
+      <div className="
+        flex flex-col items-center justify-between
+        w-full h-[calc(100vh-var(--status-bar-height))]
+        p-[20px]
+        bg-primary-main-100
+      ">
+        <div></div>
+        <div className="
+          flex flex-col items-center
+          gap-[10px]
+        ">
+          <div
+            className="
+              px-[15px] py-[12px]
+              bg-layout-white
+              text-layout-black
+              rounded-[10px]
+              font-[16px] font-[600]
+            "
+            style={{ boxShadow: '0px 0px 4px 0px rgba(0,0,0,0.15)' }}
+          >
+            안녕하세요!<br />
+            오늘부터 함께할 헤이라고 해요.
+          </div>
+          <img src={HeyCharacter} alt="logo"
+            className="
+              w-[160px]
+            "
+          />
+        </div>
+        <motion.button
+          variants={buttonVariants}
+          whileHover="hover"
+          whileTap="tap"
+          transition={{
+            type: "spring",
+            stiffness: 400,
+            damping: 17
+          }}
+          className="
+            w-full h-[45px]
+            bg-primary-main-600
+            rounded-[8px]
+            text-[#FFFFFF] font-[16px] font-[700]
+          "
+          onClick={() => {
+            // step2를 FullSheet로 직접 열기
+            pushNewFullSheet(
+              InitialProfileStep2NewFullSheet,
+              { userInitialProfile, setUserInitialProfile, endInitialProfile },
+              {
+                smFull: true,
+                closeOnBackdropClick: false,
+                isDragToCloseEnabled: false
+              }
+            );
+          }}
+        >
+          시작하기
+        </motion.button>
+      </div>
+    </div>
+  );
+};
+
+export default Main;
